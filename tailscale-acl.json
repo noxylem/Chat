@@ -1,0 +1,100 @@
+{
+	// HTTPS via Tailscale Serve on jpc:
+	//   :443    → Vaultwarden (Bitwarden requires HTTPS)
+	//   :10000  → All admin apps via Caddy
+	// OPNsense (tag:router): jpc (tag:server) only
+
+	"groups": {
+		"group:admin": ["noxylem@github"],
+	},
+
+	"tagOwners": {
+		"tag:server": ["group:admin"],
+		"tag:router": ["group:admin"],
+		"tag:other":  ["autogroup:member"],
+		"tag:temp":   ["autogroup:admin"],
+	},
+
+	"acls": [
+		{"action": "accept", "src": ["tag:server"], "dst": ["tag:router:*"]},
+
+		{
+			"action": "accept",
+			"src":    ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst":    ["tag:server:22"],
+		},
+
+		{
+			"action": "accept",
+			"src":    ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst":    ["tag:server:443"],
+		},
+
+		{
+			"action": "accept",
+			"src":    ["group:admin", "tag:server"],
+			"dst":    ["tag:server:10000"],
+		},
+	],
+
+	"nodeAttrs": [
+		{"target": ["100.91.231.86"],  "attr": ["mullvad"]},
+		{"target": ["100.80.121.50"],  "attr": ["mullvad"]},
+		{"target": ["100.74.57.82"],   "attr": ["mullvad"]},
+		{"target": ["100.91.142.10"],  "attr": ["mullvad"]},
+		{"target": ["100.107.10.117"], "attr": ["mullvad"]},
+		{"target": ["100.65.93.44"],   "attr": ["mullvad"]},
+	],
+
+	"grants": [
+		{
+			"src": ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst": ["tag:server"],
+			"ip":  ["443"],
+		},
+
+		{
+			"src": ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst": ["tag:server"],
+			"ip":  ["22"],
+		},
+
+		{
+			"src": ["group:admin", "tag:server"],
+			"dst": ["tag:server"],
+			"ip":  [
+				"10000",
+				"8081",
+				"8088",
+				"8050",
+				"8080",
+				"7878",
+				"8989",
+				"9000",
+				"9443",
+				"32400",
+			],
+		},
+
+		{
+			"src": ["tag:other"],
+			"dst": ["tag:temp"],
+			"ip":  ["8084"],
+		},
+	],
+
+	"ssh": [
+		{
+			"action": "accept",
+			"src":    ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst":    ["tag:server"],
+			"users":  ["jpc", "root", "autogroup:nonroot"],
+		},
+		{
+			"action": "accept",
+			"src":    ["tag:server"],
+			"dst":    ["tag:router"],
+			"users":  ["jpc", "root", "autogroup:nonroot"],
+		},
+	],
+}

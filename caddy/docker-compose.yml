@@ -1,0 +1,14 @@
+# Caddy — localhost only. SABnzbd uses host :8080, so Caddy uses :8180 and :8190.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8180:8180"
+      - "127.0.0.1:8190:8190"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

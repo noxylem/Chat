@@ -1,0 +1,141 @@
+{
+	// =============================================================================
+	// TAILSCALE ACL FOR JPC HOME SERVER
+	// =============================================================================
+	//
+	// Paste this entire file into: https://login.tailscale.com/admin/acls
+	// Click Save, wait ~30 seconds for devices to pick it up.
+	//
+	// HTTPS LAYOUT (Tailscale Serve on jpc):
+	//   Port 443    → Vaultwarden only  (every tailnet member)
+	//   Port 10000  → Admin apps        (group:admin + jpc itself)
+	//
+	// OPNsense router: ONLY jpc (tag:server) may reach it — not phones/laptops directly.
+	//
+	// DEVICE TAGS (must match Tailscale admin → Machines):
+	//   jpc       = tag:server
+	//   opnsense  = tag:router
+	//   titan     = tag:other + tag:temp
+	//   ruthie    = tag:other
+	//   james-laptop, oneplus-13 = no tag (owned by noxylem@github)
+	// =============================================================================
+
+	// Human admin users — james-laptop and oneplus-13 (via noxylem@github).
+	// jpc the SERVER is tag:server, not in this group.
+	"groups": {
+		"group:admin": ["noxylem@github"],
+	},
+
+	// Who may assign tags to devices in the Tailscale admin console.
+	"tagOwners": {
+		"tag:server": ["group:admin"],
+		"tag:router": ["group:admin"],
+		"tag:other":  ["autogroup:member"],
+
+		// --- TITAN ONLY — delete when titan is removed ---
+		"tag:temp": ["autogroup:admin"],
+	},
+
+	// Network-level allow rules (classic ACL section).
+	"acls": [
+		// OPNsense: only jpc may reach the router (all ports including GUI :8443).
+		{"action": "accept", "src": ["tag:server"], "dst": ["tag:router:*"]},
+
+		// SSH into jpc (Tailscale SSH + port 22).
+		{
+			"action": "accept",
+			"src":    ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst":    ["tag:server:22"],
+		},
+
+		// Vaultwarden HTTPS — Tailscale Serve port 443 (everyone on tailnet).
+		{
+			"action": "accept",
+			"src":    ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst":    ["tag:server:443"],
+		},
+
+		// Admin apps HTTPS — Tailscale Serve port 10000 (admins + jpc only).
+		// noxylem@github = explicit owner of james-laptop / oneplus-13 (untagged).
+		{
+			"action": "accept",
+			"src":    ["group:admin", "noxylem@github", "tag:server"],
+			"dst":    ["tag:server:10000"],
+		},
+	],
+
+	// Mullvad exit-node preference per device IP.
+	"nodeAttrs": [
+		{"target": ["100.91.231.86"],  "attr": ["mullvad"]}, // opnsense
+		{"target": ["100.80.121.50"],  "attr": ["mullvad"]}, // jpc
+		{"target": ["100.74.57.82"],   "attr": ["mullvad"]}, // titan
+		{"target": ["100.91.142.10"],  "attr": ["mullvad"]}, // james-laptop
+		{"target": ["100.107.10.117"], "attr": ["mullvad"]}, // oneplus-13
+		{"target": ["100.65.93.44"],   "attr": ["mullvad"]}, // ruthie
+	],
+
+	// Port-level grants (required for tagged servers like jpc / tag:server).
+	"grants": [
+		// Vaultwarden — HTTPS only via Tailscale Serve :443.
+		// autogroup:member = untagged devices (james-laptop, oneplus-13)
+		// tag:other        = ruthie, titan
+		// tag:server       = jpc connecting to itself
+		{
+			"src": ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst": ["tag:server"],
+			"ip":  ["443"],
+		},
+
+		// SSH to jpc.
+		{
+			"src": ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst": ["tag:server"],
+			"ip":  ["22"],
+		},
+
+		// Admin — HTTPS :10000 plus direct HTTP fallbacks for troubleshooting.
+		// Remove individual HTTP ports once everything works via :10000.
+		// noxylem@github = james-laptop / oneplus-13 (required for tagged-server grants).
+		{
+			"src": ["group:admin", "noxylem@github", "tag:server"],
+			"dst": ["tag:server"],
+			"ip":  [
+				"tcp:10000", // Tailscale Serve → Caddy admin listener
+				"8081",  // Vaultwarden direct
+				"8088",  // Nextcloud direct
+				"8050",  // Tandoor direct
+				"8080",  // SABnzbd direct
+				"7878",  // Radarr direct
+				"8989",  // Sonarr direct
+				"9000",  // Portainer direct
+				"9443",  // Portainer native HTTPS
+				"32400", // Plex direct
+			],
+		},
+
+		// --- TITAN ONLY — delete when titan is removed ---
+		{
+			"src": ["tag:other"],
+			"dst": ["tag:temp"],
+			"ip":  ["8084"],
+		},
+	],
+
+	// Tailscale SSH (identity-based SSH, separate from port 22 grants).
+	"ssh": [
+		// SSH to jpc server.
+		{
+			"action": "accept",
+			"src":    ["autogroup:member", "group:admin", "tag:other", "tag:server"],
+			"dst":    ["tag:server"],
+			"users":  ["jpc", "root", "autogroup:nonroot"],
+		},
+		// SSH to OPNsense — jpc only (matches router ACL above).
+		{
+			"action": "accept",
+			"src":    ["tag:server"],
+			"dst":    ["tag:router"],
+			"users":  ["jpc", "root", "autogroup:nonroot"],
+		},
+	],
+}

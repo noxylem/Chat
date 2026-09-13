@@ -29,7 +29,6 @@
 :8190 {
 	log
 
-	# Trailing-slash redirects (one-time; stops /sonarr → /sonarr/)
 	redir /sonarr /sonarr/ 308
 	redir /radarr /radarr/ 308
 	redir /nextcloud /nextcloud/ 308
@@ -37,18 +36,7 @@
 	redir /portainer /portainer/ 308
 	redir /sabnzbd /sabnzbd/ 308
 
-	# -------------------------------------------------------------------------
-	# Sonarr / Radarr — DO NOT use handle_path here
-	# -------------------------------------------------------------------------
-	# Servarr UrlBase is /sonarr or /radarr. The app must receive the FULL path
-	# (e.g. /sonarr/login), same as nginx: proxy_pass http://127.0.0.1:8989;
-	# handle_path STRIPS /sonarr and causes ERR_TOO_MANY_REDIRECTS.
-	#
-	# In each app (Settings → General → show advanced):
-	#   URL Base:     /sonarr  or  /radarr
-	#   Enable SSL:   OFF
-	#   Use Proxy:    OFF  (outbound proxy — not this reverse proxy)
-	# -------------------------------------------------------------------------
+	# Sonarr / Radarr — keep full path (UrlBase /sonarr or /radarr)
 	handle /sonarr* {
 		reverse_proxy host.docker.internal:8989 {
 			header_up Host {http.request.hostport}
@@ -66,20 +54,27 @@
 		}
 	}
 
+	# Nextcloud — strip /nextcloud (handle_path) + run fix-nextcloud.sh for overwrite settings
 	handle_path /nextcloud/* {
 		reverse_proxy host.docker.internal:8088 {
 			header_up Host {http.request.hostport}
 			header_up X-Forwarded-Host {http.request.hostport}
 			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-For {remote_host}
 		}
 	}
-	handle_path /tandoor/* {
+
+	# Tandoor — keep /tandoor path + X-Script-Name (see fix-tandoor.sh for env vars)
+	handle /tandoor* {
 		reverse_proxy host.docker.internal:8050 {
 			header_up Host {http.request.hostport}
 			header_up X-Forwarded-Host {http.request.hostport}
 			header_up X-Forwarded-Proto https
+			header_up X-Script-Name /tandoor
+			header_up X-Forwarded-For {remote_host}
 		}
 	}
+
 	handle_path /portainer/* {
 		reverse_proxy host.docker.internal:9000 {
 			header_up Host {http.request.hostport}
