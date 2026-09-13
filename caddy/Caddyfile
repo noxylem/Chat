@@ -10,6 +10,16 @@
 # PUBLIC:  https://jpc.wyrm-pike.ts.net
 # ADMIN:   https://jpc.wyrm-pike.ts.net:10000/<app>/
 #
+# Servarr behind :10000 — force external hostname so browser redirects stay on admin port.
+(servarr_proxy) {
+	header_up Host jpc.wyrm-pike.ts.net:10000
+	header_up X-Forwarded-Host jpc.wyrm-pike.ts.net:10000
+	header_up X-Forwarded-Proto https
+	header_up X-Forwarded-For {remote_host}
+	# Sonarr sometimes omits :10000 in Location (curl -I may still show 401).
+	header_down Location "^https://jpc\.wyrm-pike\.ts\.net(/.*)?$" "https://jpc.wyrm-pike.ts.net:10000$1"
+}
+#
 # Docker host ports:
 #   vaultwarden 8081 | nextcloud 8088 | tandoor 8050 | sabnzbd 8080
 #   sonarr 8989 | radarr 7878 | portainer 9000 | plex 32400
@@ -39,18 +49,12 @@
 	# Sonarr / Radarr — keep full path (UrlBase /sonarr or /radarr)
 	handle /sonarr* {
 		reverse_proxy host.docker.internal:8989 {
-			header_up Host {http.request.hostport}
-			header_up X-Forwarded-Host {http.request.hostport}
-			header_up X-Forwarded-Proto https
-			header_up X-Forwarded-For {remote_host}
+			import servarr_proxy
 		}
 	}
 	handle /radarr* {
 		reverse_proxy host.docker.internal:7878 {
-			header_up Host {http.request.hostport}
-			header_up X-Forwarded-Host {http.request.hostport}
-			header_up X-Forwarded-Proto https
-			header_up X-Forwarded-For {remote_host}
+			import servarr_proxy
 		}
 	}
 

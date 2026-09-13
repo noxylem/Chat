@@ -24,6 +24,14 @@ for path in / /sonarr/ /nextcloud/ /tandoor/ /portainer/; do
 done
 
 echo ""
+echo "=== Sonarr redirect chain (browser follows these; curl -I alone does not) ==="
+curl -skI -L --max-redirs 10 "${URL}/sonarr/" 2>&1 | grep -iE '^HTTP|^location' || true
+
+echo ""
+echo "=== TLS cert (no -k) — browser must trust this ==="
+curl -sI --max-time 10 "${URL}/sonarr/" | head -1 || echo "CERT ERROR (LibreWolf may block the page)"
+
+echo ""
 echo "If you see 'Connection refused' or timeout → ACL or Tailscale Serve issue on jpc."
 echo "If curl works here but browser fails → try private/incognito window."
 echo "If exit node is ON → turn it OFF in Tailscale on this laptop."
