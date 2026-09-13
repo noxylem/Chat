@@ -2,6 +2,11 @@
 
 General-purpose Q&A workspace. Match response style to prompt prefixes below.
 
+## User preferences
+
+- **File editor:** Use **micro** (not nano or vim) when telling the user to edit files. micro uses normal shortcuts: Ctrl+A select all, Ctrl+C copy, Ctrl+V paste, Ctrl+S save, Ctrl+Q quit. Not a Microsoft product.
+- **User context:** Beginner on Linux (Fedora). Plain-language steps; full copy-paste commands.
+
 ## Prefix detection
 
 Check the user's message at the start of every turn. Matching is **case-insensitive**.
