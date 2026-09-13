@@ -10,6 +10,10 @@
 	//   Port 443    → Vaultwarden only        (every tailnet member)
 	//   Port 10000  → Admin apps via Caddy    (group:admin + jpc only)
 	//
+	// MOONLIGHT / SUNSHINE (game streaming):
+	//   Sunshine on Fedora laptop (host)  →  Moonlight on jpc (client)
+	//   jpc (tag:server) connects to laptop (group:admin) on Sunshine ports
+	//
 	// DEVICE TAGS (Tailscale admin → Machines):
 	//   jpc          = tag:server
 	//   opnsense     = tag:router
@@ -78,6 +82,14 @@
 			"src":    ["group:admin", "noxylem@github", "tag:server"],
 			"dst":    ["tag:server:10000"],
 		},
+
+		// Moonlight on jpc → Sunshine on Fedora laptop (game streaming)
+		// Sunshine ports: TCP 47984-47990, UDP 47998-48010, UDP 48100-48110
+		{
+			"action": "accept",
+			"src":    ["tag:server"],
+			"dst":    ["group:admin"],
+		},
 	],
 
 	// =============================================================================
@@ -129,6 +141,17 @@
 				"9000",  // Portainer direct
 				"9443",  // Portainer native HTTPS
 				"32400", // Plex direct
+			],
+		},
+
+		// Moonlight on jpc → Sunshine on admin laptop (narrow port list)
+		{
+			"src": ["tag:server"],
+			"dst": ["group:admin", "noxylem@github"],
+			"ip":  [
+				"tcp:47984-47990",
+				"udp:47998-48010",
+				"udp:48100-48110",
 			],
 		},
 
