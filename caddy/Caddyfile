@@ -1,0 +1,100 @@
+# =============================================================================
+# JPC — Caddy behind Tailscale Serve
+# =============================================================================
+#
+# Tailscale Serve (run on jpc after Caddy is up):
+#   sudo tailscale serve reset
+#   sudo tailscale serve --bg --https=443    http://127.0.0.1:8180
+#   sudo tailscale serve --bg --https=10000  http://127.0.0.1:8190
+#
+# PUBLIC:  https://jpc.wyrm-pike.ts.net
+# ADMIN:   https://jpc.wyrm-pike.ts.net:10000/<app>/
+#
+# Servarr behind :10000 — force external hostname so browser redirects stay on admin port.
+(servarr_proxy) {
+	header_up Host jpc.wyrm-pike.ts.net:10000
+	header_up X-Forwarded-Host jpc.wyrm-pike.ts.net:10000
+	header_up X-Forwarded-Proto https
+	header_up X-Forwarded-For {remote_host}
+	# Sonarr sometimes omits :10000 in Location (curl -I may still show 401).
+	header_down Location "^https://jpc\.wyrm-pike\.ts\.net(/.*)?$" "https://jpc.wyrm-pike.ts.net:10000$1"
+}
+#
+# Docker host ports:
+#   vaultwarden 8081 | nextcloud 8088 | tandoor 8050 | sabnzbd 8080
+#   sonarr 8989 | radarr 7878 | portainer 9000 | plex 32400
+# =============================================================================
+
+{
+	email noxylem@proton.me
+}
+
+# Vaultwarden only — Tailscale :443
+:8180 {
+	log
+	reverse_proxy host.docker.internal:8081
+}
+
+# Admin apps — Tailscale :10000
+:8190 {
+	log
+
+	redir /sonarr /sonarr/ 308
+	redir /radarr /radarr/ 308
+	redir /nextcloud /nextcloud/ 308
+	redir /tandoor /tandoor/ 308
+	redir /portainer /portainer/ 308
+	redir /sabnzbd /sabnzbd/ 308
+
+	# Sonarr / Radarr — keep full path (UrlBase /sonarr or /radarr)
+	handle /sonarr* {
+		reverse_proxy host.docker.internal:8989 {
+			import servarr_proxy
+		}
+	}
+	handle /radarr* {
+		reverse_proxy host.docker.internal:7878 {
+			import servarr_proxy
+		}
+	}
+
+	# Nextcloud — strip /nextcloud (handle_path) + run fix-nextcloud.sh for overwrite settings
+	handle_path /nextcloud/* {
+		reverse_proxy host.docker.internal:8088 {
+			header_up Host {http.request.hostport}
+			header_up X-Forwarded-Host {http.request.hostport}
+			header_up X-Forwarded-Proto https
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# Tandoor — keep /tandoor path + X-Script-Name (see fix-tandoor.sh for env vars)
+	handle /tandoor* {
+		reverse_proxy host.docker.internal:8050 {
+			header_up Host {http.request.hostport}
+			header_up X-Forwarded-Host {http.request.hostport}
+			header_up X-Forwarded-Proto https
+			header_up X-Script-Name /tandoor
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	handle_path /portainer/* {
+		reverse_proxy host.docker.internal:9000 {
+			header_up Host {http.request.hostport}
+			header_up X-Forwarded-Proto https
+		}
+	}
+	handle_path /sabnzbd/* {
+		reverse_proxy host.docker.internal:8080 {
+			header_up Host {http.request.hostport}
+			header_up X-Forwarded-Proto https
+		}
+	}
+	handle /plex/* {
+		reverse_proxy host.docker.internal:32400
+	}
+	handle / {
+		respond "Admin: /nextcloud /tandoor /portainer /sonarr /radarr /sabnzbd /plex" 200
+	}
+}
