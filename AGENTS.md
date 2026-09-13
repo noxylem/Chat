@@ -2,6 +2,13 @@
 
 General-purpose Q&A workspace. Match response style to prompt prefixes below.
 
+## User preferences
+
+- **File editor (james-laptop):** **Cursor** with **Remote-SSH** (`anysphere.remote-ssh`), or **VSCodium** (`codium`) with Remote-SSH — GUI on laptop, files on server. Normal Ctrl+A/C/V on laptop.
+- **File editor (jpc server terminal):** **micro** (not nano or vim). Ctrl+A select all, Ctrl+C copy, Ctrl+V paste, Ctrl+S save, Ctrl+Q quit.
+- **User context:** Beginner on Linux. **james-laptop** = local laptop. **jpc** = Pop!_OS **server** (user SSHs in from laptop). Package manager on jpc: **apt** (not dnf). Plain-language steps; full copy-paste commands.
+- **SSH + clipboard:** Over SSH, micro copy stays on jpc — it does not reach james-laptop’s browser. To share file contents: run `cat /path/to/file` on jpc, select in **james-laptop’s** terminal window, **Ctrl+Shift+C**, paste in chat.
+
 ## Prefix detection
 
 Check the user's message at the start of every turn. Matching is **case-insensitive**.
