@@ -4,8 +4,9 @@ General-purpose Q&A workspace. Match response style to prompt prefixes below.
 
 ## User preferences
 
-- **File editor:** Use **micro** (not nano or vim) when telling the user to edit files. micro uses normal shortcuts: Ctrl+A select all, Ctrl+C copy, Ctrl+V paste, Ctrl+S save, Ctrl+Q quit. Not a Microsoft product. On Fedora, micro needs **wl-clipboard** installed and `"clipboard": "external"` in `~/.config/micro/settings.json` so copy/paste works outside the terminal. Fallback for sharing file contents: `cat /path/to/file` then terminal **Ctrl+Shift+C**, or **gnome-text-editor** for a GUI with normal clipboard.
-- **User context:** Beginner on Linux (Fedora). Plain-language steps; full copy-paste commands.
+- **File editor:** Use **micro** (not nano or vim) when telling the user to edit files. micro uses normal shortcuts: Ctrl+A select all, Ctrl+C copy, Ctrl+V paste, Ctrl+S save, Ctrl+Q quit. Not a Microsoft product.
+- **User context:** Beginner on Linux. Local machine **jpc** runs **Pop!_OS**; user SSHs into a **Pop!_OS server**. Package manager is **apt** (not dnf). Plain-language steps; full copy-paste commands.
+- **SSH + clipboard:** Over SSH, micro copy stays on the server — it does not reach the local browser. To share file contents with the agent: run `cat /path/to/file` in the SSH session, select the output in the **local** terminal window, **Ctrl+Shift+C**, paste in chat.
 
 ## Prefix detection
 
