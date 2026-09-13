@@ -4,7 +4,8 @@ General-purpose Q&A workspace. Match response style to prompt prefixes below.
 
 ## User preferences
 
-- **File editor:** Use **micro** (not nano or vim) when telling the user to edit files. micro uses normal shortcuts: Ctrl+A select all, Ctrl+C copy, Ctrl+V paste, Ctrl+S save, Ctrl+Q quit. Not a Microsoft product.
+- **File editor (local jpc):** **VSCodium** (`codium`) — free, non-Microsoft VS Code alternative. Normal Ctrl+A/C/V, GUI, system clipboard works.
+- **File editor (SSH / server terminal):** **micro** (not nano or vim). Ctrl+A select all, Ctrl+C copy, Ctrl+V paste, Ctrl+S save, Ctrl+Q quit.
 - **User context:** Beginner on Linux. Local machine **jpc** runs **Pop!_OS**; user SSHs into a **Pop!_OS server**. Package manager is **apt** (not dnf). Plain-language steps; full copy-paste commands.
 - **SSH + clipboard:** Over SSH, micro copy stays on the server — it does not reach the local browser. To share file contents with the agent: run `cat /path/to/file` in the SSH session, select the output in the **local** terminal window, **Ctrl+Shift+C**, paste in chat.
 
