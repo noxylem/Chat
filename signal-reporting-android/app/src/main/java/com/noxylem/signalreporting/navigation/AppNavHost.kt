@@ -54,6 +54,11 @@ fun AppNavHost(factory: AppViewModelFactory) {
                 onCreateImageSet = { imageSetId ->
                     navController.navigate(Routes.imageSet(imageSetId))
                 },
+                onGoToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                    }
+                },
             )
         }
 

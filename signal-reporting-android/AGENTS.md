@@ -41,6 +41,8 @@ From this directory:
 ./gradlew assembleDebug
 ```
 
+On **Fedora** with Java 25 as default, set `JAVA_HOME` to Java 21 first — see [README.md](./README.md#fedora-terminal-builds).
+
 Open the `signal-reporting-android` folder in Android Studio (not the Chat repo root) and sync Gradle.
 
 ## Scaffold status

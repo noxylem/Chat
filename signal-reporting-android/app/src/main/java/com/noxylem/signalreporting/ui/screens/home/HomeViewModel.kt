@@ -4,13 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.noxylem.signalreporting.data.prefs.TechIdPreferences
 import com.noxylem.signalreporting.data.repository.LocalReportRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val repository: LocalReportRepository,
     private val techIdPreferences: TechIdPreferences,
 ) : ViewModel() {
+
+    val savedTechId: StateFlow<String?> =
+        techIdPreferences.techId.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     suspend fun createNewReport(): Long? {
         val techId = techIdPreferences.techId.first()?.takeIf { it.isNotBlank() } ?: return null

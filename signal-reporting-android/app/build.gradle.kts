@@ -16,6 +16,8 @@ android {
         versionCode = 1
         versionName = "0.1.0-scaffold"
 
+        buildConfigField("String", "BUILD_STAMP", "\"scaffold-2\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -38,8 +40,13 @@ android {
         jvmTarget = "17"
     }
 
+    kotlin {
+        jvmToolchain(17)
+    }
+
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
