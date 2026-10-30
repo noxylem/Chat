@@ -18,55 +18,42 @@ Install on a connected device or emulator:
 ./gradlew installDebug
 ```
 
-Or use the helper script (see below).
-
 Open this folder in Android Studio (not the Chat repo root) and sync Gradle.
 
-## Fedora terminal builds
+## Fedora + Java 25
 
-Gradle **8.10** (this project) cannot run on **Java 25**. If `./gradlew` fails with a vague error like `What went wrong: 25.0.4.1`, your shell is using JDK 25 as `JAVA_HOME` or as the default `java` on `PATH`.
+On recent Fedora releases, the default `java` package may be **Java 25**, and Android Studio’s bundled **JBR** may also be **Java 25**. This project uses **Gradle 8.10.2**, which supports running Gradle on **JVM 21–23** only—not Java 25.
 
-### One-time setup
+If `./gradlew` fails with a vague error like `What went wrong: 25.0.4.1`, Gradle is starting on JDK 25. **Do not point Gradle at Java 25.** Use JDK 21 (recommended) or 23 for the Gradle daemon and Android Gradle Plugin.
 
-```bash
-sudo dnf install java-21-openjdk-devel
-```
+Kotlin/Java compilation in this project targets **JDK 17** via Gradle toolchains; that does not change the JVM Gradle itself must use.
 
-Find the JDK path (usually one of these):
+### Install Temurin 21 (recommended on Fedora)
 
-```bash
-ls /usr/lib/jvm/java-21-openjdk*
-```
-
-### Every terminal session (recommended)
-
-Point Gradle at Java 21 **before** running `./gradlew`:
+When `java-21-openjdk-devel` is unavailable on your Fedora version, use Eclipse Temurin:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
-export PATH="$JAVA_HOME/bin:$PATH"
-java -version   # should show 21.x, not 25.x
-./gradlew assembleDebug
+sudo dnf install -y adoptium-temurin-java-repository
+sudo dnf install -y temurin-21-jdk
+export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk
+./gradlew -Dorg.gradle.java.home="$JAVA_HOME" installDebug
 ```
 
-Add the `export` lines to `~/.bashrc` if you build often.
+Keep `JAVA_HOME` set in any shell where you run `./gradlew`, or pass `-Dorg.gradle.java.home=...` every time.
 
-### Helper script
+You still need the Android SDK (`ANDROID_HOME` or `local.properties` with `sdk.dir=...`). Android Studio sets this automatically; on Fedora CLI-only installs, use [command-line tools](https://developer.android.com/studio#command-tools).
+
+### Helper script (Fedora)
 
 From `signal-reporting-android/`:
 
 ```bash
-chmod +x scripts/install-debug.sh
-./scripts/install-debug.sh
+./scripts/install-debug-fedora.sh
 ```
 
-The script picks Java 21 if installed, then runs `./gradlew installDebug`.
+The script tries `/usr/lib/jvm/temurin-21-jdk`, then `java-23-openjdk`, then `java-21-openjdk`, runs `./gradlew --stop`, then `installDebug` with `-Dorg.gradle.java.home`.
 
-### Toolchains (compile JDK)
-
-This project uses Gradle **JVM toolchains** (JDK 17) with the [Foojay resolver](https://github.com/gradle/foojay-toolchains) so Kotlin/Java compilation can use a downloaded JDK even when your system default is newer. **The Gradle daemon itself** still must start on JDK 17–21 — set `JAVA_HOME` as above.
-
-You also need the Android SDK (`ANDROID_HOME` or `local.properties` with `sdk.dir=...`). Android Studio sets this automatically; on Fedora CLI-only installs, use [command-line tools](https://developer.android.com/studio#command-tools).
+A generic helper that adjusts `JAVA_HOME`/`PATH` for Java 21 is also available: `./scripts/install-debug.sh`.
 
 ## Verify install
 
