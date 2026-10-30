@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Signal Reporting</string>
+    <string name="home_tech_id_logged_in">Logged in as Tech ID: %1$s</string>
+    <string name="home_tech_id_not_logged_in">Not logged in — enter your Tech ID on the Login screen</string>
+    <string name="snackbar_enter_tech_id_first">Enter your Tech ID on the Login screen first</string>
+    <string name="snackbar_draft_saved">Draft saved on phone</string>
+    <string name="go_to_login">Go to Login</string>
+    <string name="build_stamp_label">Build: %1$s</string>
+</resources>
