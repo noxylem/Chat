@@ -1,0 +1,48 @@
+name: Signal Reporting Android
+
+on:
+  push:
+    branches:
+      - signal-reporting-android-scaffold
+      - main
+    paths:
+      - "signal-reporting-android/**"
+      - ".github/workflows/signal-reporting-android.yml"
+  pull_request:
+    paths:
+      - "signal-reporting-android/**"
+      - ".github/workflows/signal-reporting-android.yml"
+
+jobs:
+  assemble-debug:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: signal-reporting-android
+    env:
+      ANDROID_HOME: ${{ github.workspace }}/android-sdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Android command-line tools
+        run: |
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdtools.zip
+          unzip -q /tmp/cmdtools.zip -d "$ANDROID_HOME/cmdline-tools"
+          mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+
+      - name: Install Android SDK packages
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+
+      - name: assembleDebug
+        run: ./gradlew assembleDebug -Dorg.gradle.java.home="$JAVA_HOME"
